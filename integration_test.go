@@ -65,8 +65,8 @@ func testIntegration(t *testing.T, authenticator auth.Authenticator) {
 	logger := logging.LogWriter(os.Stdout)
 	level := logging.Summary
 	if testing.Verbose() {
-		level = logging.WithHeaders
-		//level = logging.WithHeadersAndBodies
+		//level = logging.WithHeaders
+		level = logging.WithHeadersAndBodies
 	}
 	httpClient := loggingclient.New(server.Client(), logger, level)
 
@@ -96,46 +96,70 @@ func testIntegration(t *testing.T, authenticator auth.Authenticator) {
 
 	t.Logf("Stat foo/\n")
 	fi1, err := client.Stat("foo/")
-	g.Expect(fi1.IsDir(), err).To(BeTrue())
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(fi1.IsDir()).To(BeTrue())
 
 	t.Logf("Stat foo/LICENSE\n")
 	fi2, err := client.Stat("foo/LICENSE")
 	g.Expect(err).NotTo(HaveOccurred())
 	g.Expect(fi2.IsDir()).To(BeFalse())
 
-	t.Logf("Copy foo/LICENSE foo/copy-of-license\n")
-	err = client.Copy("foo/LICENSE", "foo/copy-of-license")
+	t.Logf("Mkdir tmp\n")
+	must(t, client.Mkdir("tmp", 0755))
+
+	t.Logf("Copy foo/LICENSE tmp/copy-of-license\n")
+	err = client.Copy("foo/LICENSE", "tmp/copy-of-license")
 	g.Expect(err).NotTo(HaveOccurred())
 
-	t.Logf("Copy foo/LICENSE foo/copy-of-license2\n")
-	err = client.Copy("foo/LICENSE", "foo/copy-of-license2")
+	t.Logf("Copy foo/LICENSE tmp/copy-of-license2\n")
+	err = client.Copy("foo/LICENSE", "tmp/copy-of-license2")
 	g.Expect(err).NotTo(HaveOccurred())
 
-	t.Logf("CopyWithoutOverwriting foo/LICENSE foo/copy-of-license2\n")
+	t.Logf("CopyWithoutOverwriting foo/LICENSE tmp/copy-of-license2\n")
 	expectError("file already exists")
-	err = client.CopyWithoutOverwriting("foo/LICENSE", "foo/copy-of-license2")
+	err = client.CopyWithoutOverwriting("foo/LICENSE", "tmp/copy-of-license2")
 	g.Expect(err).To(HaveOccurred())
 
-	t.Logf("Rename foo/copy-of-license foo/other\n")
-	err = client.Rename("foo/copy-of-license", "foo/other")
+	t.Logf("ReadFile tmp/copy-of-license\n")
+	bs, err := client.ReadFile("tmp/copy-of-license")
+	g.Expect(bs, err).To(HaveLen(len(content)))
+
+	t.Logf("Rename tmp/copy-of-license tmp/other\n")
+	err = client.Rename("tmp/copy-of-license", "tmp/other")
 	g.Expect(err).NotTo(HaveOccurred())
 
-	t.Logf("Rename foo/copy-of-license2 foo/other\n")
-	err = client.Rename("foo/copy-of-license2", "foo/other")
+	t.Logf("Rename tmp/copy-of-license2 tmp/other\n")
+	err = client.Rename("tmp/copy-of-license2", "tmp/other")
 	g.Expect(err).NotTo(HaveOccurred())
 
-	t.Logf("RenameWithoutOverwriting foo/other foo/LICENSE\n")
+	t.Logf("RenameWithoutOverwriting tmp/other foo/LICENSE\n")
 	expectError("file already exists")
-	err = client.RenameWithoutOverwriting("foo/other", "foo/LICENSE")
+	err = client.RenameWithoutOverwriting("tmp/other", "foo/LICENSE")
 	g.Expect(err).To(HaveOccurred())
 
 	t.Logf("ReadDir foo\n")
 	fis, err := client.ReadDir("foo")
-	g.Expect(fis, err).To(HaveLen(2))
+	g.Expect(fis, err).To(HaveLen(1))
 
-	t.Logf("ReadFile foo/other\n")
-	bs, err := client.ReadFile("foo/other")
-	g.Expect(bs, err).To(HaveLen(len(content)))
+	t.Logf("ReadDir tmp\n")
+	fis, err = client.ReadDir("tmp")
+	g.Expect(fis, err).To(HaveLen(1))
+
+	t.Logf("ReadDir /\n")
+	fis, err = client.ReadDir("/")
+	g.Expect(fis, err).To(HaveLen(2))
+	g.Expect("foo,tmp").To(ContainSubstring(fis[0].Name()))
+	g.Expect("foo,tmp").To(ContainSubstring(fis[1].Name()))
+	g.Expect(fis[0].Name()).NotTo(Equal(fis[1].Name()))
+
+	t.Logf("Remove tmp/other\n")
+	err = client.Remove("tmp/other")
+	g.Expect(err).NotTo(HaveOccurred())
+
+	//FIXME
+	//t.Logf("ReadDir /\n")
+	//fis, err = client.ReadDir("/")
+	//g.Expect(fis, err).To(HaveLen(1))
 
 	server.Close()
 }

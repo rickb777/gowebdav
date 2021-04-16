@@ -325,9 +325,10 @@ func (c *client) Remove(path string) error {
 
 // RemoveAll removes remote files
 func (c *client) RemoveAll(path string) error {
+	path = withLeadingSlash(path)
 	rs, err := c.request(http.MethodDelete, path, nil, nil)
 	if err != nil {
-		return newPathError("Remove", path, 400)
+		return newPathErrorErr("Remove", path, err)
 	}
 	err = rs.Body.Close()
 	if err != nil {

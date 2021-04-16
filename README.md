@@ -8,9 +8,9 @@ A golang WebDAV client library with a command line tool included.
 
 ## Main features
 
-`gowebdav2` library allows the following actions on remote WebDAV servers:
-* [create path](#create-path-on-a-webdav-server)
-* [get files list](#get-files-list)
+This API allows the following actions on remote WebDAV servers:
+* [create folders](#create-folders-on-a-webdav-server)
+* [list files](#list-files)
 * [download file](#download-file-to-byte-array)
 * [upload file](#upload-file-from-byte-array)
 * [get information about specified file/folder](#get-information-about-specified-filefolder)
@@ -24,21 +24,21 @@ A golang WebDAV client library with a command line tool included.
 
 ## Usage
 
-First of all, create a `Client` instance using the `NewClient()` function:
+Start by creating a `Client` instance using the `NewClient()` function:
 
 ```go
 root := "https://webdav.mydomain.me"
 user := "user"
 password := "password"
 
-c := gowebdav.NewClient(root, user, password)
+c := gowebdav2.NewClient(root)
 ```
 
 Then use this `Client` to perform actions described below.
 
-**NOTICE:** we will not check errors in examples, to focus you on the `gowebdav` library's code, but you should do it in your code!
+**NOTICE:** we will not check errors in examples, to focus you on the `gowebdav2` library's code, but you should do it in your code.
 
-### Create path on a WebDAV server
+### Create folders on a WebDAV server
 ```go
 err := c.Mkdir("folder", 0644)
 ```
@@ -47,7 +47,7 @@ If you want to create several nested folders, you can use `c.MkdirAll()`:
 err := c.MkdirAll("folder/subfolder/subfolder2", 0644)
 ```
 
-### Get files list
+### List files
 ```go
 files, _ := c.ReadDir("folder/subfolder")
 for _, file := range files {
@@ -61,7 +61,7 @@ for _, file := range files {
 webdavFilePath := "folder/subfolder/file.txt"
 localFilePath := "/tmp/webdav/file.txt"
 
-bytes, _ := c.Read(webdavFilePath)
+bytes, _ := c.ReadFile(webdavFilePath)
 ioutil.WriteFile(localFilePath, bytes, 0644)
 ```
 
@@ -86,7 +86,7 @@ localFilePath := "/tmp/webdav/file.txt"
 
 bytes, _ := ioutil.ReadFile(localFilePath)
 
-c.Write(webdavFilePath, bytes, 0644)
+c.WriteFile(webdavFilePath, bytes, 0644)
 ```
 
 ### Upload file via writer
@@ -115,8 +115,10 @@ oldPath := "folder/subfolder/file.txt"
 newPath := "folder/subfolder/moved.txt"
 isOverwrite := true
 
-c.Rename(oldPath, newPath, isOverwrite)
+c.Rename(oldPath, newPath)
 ```
+
+or use `RenameWithoutOverwriting(oldpath, newpath string)`.
 
 ### Copy file to another location
 ```go
@@ -124,8 +126,10 @@ oldPath := "folder/subfolder/file.txt"
 newPath := "folder/subfolder/file-copy.txt"
 isOverwrite := true
 
-c.Copy(oldPath, newPath, isOverwrite)
+c.Copy(oldPath, newPath)
 ```
+
+or use `CopyWithoutOverwriting(oldpath, newpath string) error`.
 
 ### Delete file
 ```go
