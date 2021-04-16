@@ -1,8 +1,8 @@
 # GoWebDAV
 
-[![Build Status](https://travis-ci.org/rickb777/gowebdav2.svg?branch=master)](https://travis-ci.org/rickb777/gowebdav2)
-[![GoDoc](https://godoc.org/github.com/rickb777/gowebdav2?status.svg)](https://godoc.org/github.com/rickb777/gowebdav2)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rickb777/gowebdav2)](https://goreportcard.com/report/github.com/rickb777/gowebdav2)
+[![Build Status](https://travis-ci.org/rickb777/gowebdav.svg?branch=master)](https://travis-ci.org/rickb777/gowebdav)
+[![GoDoc](https://godoc.org/github.com/rickb777/gowebdav?status.svg)](https://godoc.org/github.com/rickb777/gowebdav)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rickb777/gowebdav)](https://goreportcard.com/report/github.com/rickb777/gowebdav)
 
 A golang WebDAV client library with a command line tool included.
 
@@ -20,7 +20,7 @@ This API allows the following actions on remote WebDAV servers:
 
 ## Get started
 
-`go get github.com/rickb777/gowebdav2`
+`go get github.com/rickb777/gowebdav`
 
 ## Usage
 
@@ -31,12 +31,12 @@ root := "https://webdav.mydomain.me"
 user := "user"
 password := "password"
 
-c := gowebdav2.NewClient(root)
+c := gowebdav.NewClient(root)
 ```
 
 Then use this `Client` to perform actions described below.
 
-**NOTICE:** we will not check errors in examples, to focus you on the `gowebdav2` library's code, but you should do it in your code.
+**NOTICE:** we will not check errors in examples, to focus you on the `gowebdav` library's code, but you should do it in your code.
 
 ### Create folders on a WebDAV server
 ```go
@@ -153,7 +153,7 @@ All contributing are welcome. If you have any suggestions or find some bug, plea
 
 ## License & Acknowledgement
 
-This library is distributed under the BSD 3-Clause license found in the [LICENSE](https://github.com/rickb777/gowebdav2/blob/master/LICENSE) file.
+This library is distributed under the BSD 3-Clause license found in the [LICENSE](https://github.com/rickb777/gowebdav/blob/master/LICENSE) file.
 
 My thanks to 
 
