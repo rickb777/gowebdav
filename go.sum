@@ -30,6 +30,8 @@ github.com/rickb777/httpclient v0.0.3 h1:OElsie3itrAjESrK7r1sBHDCrLS8dslZ2tBP4Nx
 github.com/rickb777/httpclient v0.0.3/go.mod h1:WUDKOFS/OL9gIs/pXhUTlRwwvfW3SZ1mQuj4D/INQbc=
 github.com/rickb777/httpclient v0.0.4 h1:fNSP/gwWFrbrOxsY5GwSQTrWbxzqvkEJFcOfOjVw+Ac=
 github.com/rickb777/httpclient v0.0.4/go.mod h1:WUDKOFS/OL9gIs/pXhUTlRwwvfW3SZ1mQuj4D/INQbc=
+github.com/rickb777/httpclient v0.0.6 h1:t77yhM5p2wk+mJvxSlMMUcexyJJZ2XBF+HxRSNkL7Hc=
+github.com/rickb777/httpclient v0.0.6/go.mod h1:WUDKOFS/OL9gIs/pXhUTlRwwvfW3SZ1mQuj4D/INQbc=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 h1:psW17arqaxU48Z5kZ0CQnkZWQJsqcURM6tKiBApRjXI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
