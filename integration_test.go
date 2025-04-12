@@ -2,8 +2,6 @@ package gowebdav_test
 
 import (
 	"bytes"
-	"github.com/rickb777/gowebdav/auth"
-	"github.com/rickb777/httpclient/logging"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,15 +9,17 @@ import (
 	"sync"
 	"testing"
 
-	. "github.com/onsi/gomega"
+	"github.com/rickb777/expect"
 	"github.com/rickb777/gowebdav"
+	"github.com/rickb777/gowebdav/auth"
+	"github.com/rickb777/httpclient/logging"
 	"github.com/rickb777/httpclient/loggingclient"
 	"golang.org/x/net/webdav"
 )
 
 var (
-	expectedError   string
-	expectedErrorMu sync.Mutex
+	expectedError  string
+	expectedErrorµ sync.Mutex
 )
 
 func TestIntegration_no_auth(t *testing.T) {
@@ -39,23 +39,20 @@ func TestIntegration_saml_auth(t *testing.T) {
 }
 
 func testIntegration(t *testing.T, authenticator auth.Authenticator) {
-	g := NewGomegaWithT(t)
-
 	handler := &webdav.Handler{
 		Prefix:     "/a/",
 		FileSystem: webdav.NewMemFS(),
 		LockSystem: webdav.NewMemLS(),
 		Logger: func(req *http.Request, err error) {
-			t.Logf("%s %s (%v)\n", req.Method, req.URL, err)
-			expectedErrorMu.Lock()
+			tLogf(t, "%s %s (%v)\n", req.Method, req.URL, err)
+			expectedErrorµ.Lock()
 			if expectedError == "" {
-				g.Expect(err).NotTo(HaveOccurred())
+				expect.Error(err).ToBeNil(t)
 			} else {
-				g.Expect(err).To(HaveOccurred())
-				g.Expect(err.Error()).To(Equal(expectedError))
+				expect.Error(err).ToContain(t, expectedError)
 			}
 			expectedError = ""
-			expectedErrorMu.Unlock()
+			expectedErrorµ.Unlock()
 		},
 	}
 
@@ -74,8 +71,8 @@ func testIntegration(t *testing.T, authenticator auth.Authenticator) {
 		gowebdav.SetAuthentication(authenticator),
 		gowebdav.SetHttpClient(httpClient))
 
-	t.Logf("Ping\n")
-	g.Expect(client.Ping()).NotTo(HaveOccurred())
+	tLogf(t, "Ping\n")
+	expect.Error(client.Ping()).ToBeNil(t)
 
 	f, err := os.Open("LICENSE")
 	must(t, err)
@@ -86,91 +83,98 @@ func testIntegration(t *testing.T, authenticator auth.Authenticator) {
 	must(t, f.Close())
 	content := buf.Bytes()
 
-	t.Logf("Mkdir foo\n")
+	tLogf(t, "Mkdir foo\n")
 	must(t, client.Mkdir("foo", 0755))
 
-	t.Logf("WriteStream foo/LICENSE\n")
-	expectError("file already exists")
-	must(t, client.WriteStream("foo/LICENSE", bytes.NewBuffer(content), 0644))
+	tLogf(t, "WriteFile foo/LICENSE\n")
+	must(t, client.WriteFile("foo/LICENSE", content, "text/plain"))
 	buf.Reset()
 
-	t.Logf("Stat foo/\n")
+	tLogf(t, "Stat foo/\n")
 	fi1, err := client.Stat("foo/")
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(fi1.IsDir()).To(BeTrue())
+	expect.Error(err).ToBeNil(t)
+	expect.Bool(fi1.IsDir()).ToBeTrue(t)
 
-	t.Logf("Stat foo/LICENSE\n")
+	tLogf(t, "Stat foo/LICENSE\n")
 	fi2, err := client.Stat("foo/LICENSE")
-	g.Expect(err).NotTo(HaveOccurred())
-	g.Expect(fi2.IsDir()).To(BeFalse())
+	expect.Any(err).ToBeNil(t)
+	expect.Bool(fi2.IsDir()).ToBeFalse(t)
 
-	t.Logf("Mkdir tmp\n")
+	tLogf(t, "Mkdir tmp\n")
 	must(t, client.Mkdir("tmp", 0755))
 
-	t.Logf("Copy foo/LICENSE tmp/copy-of-license\n")
+	tLogf(t, "Copy foo/LICENSE tmp/copy-of-license\n")
 	err = client.Copy("foo/LICENSE", "tmp/copy-of-license")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).ToBeNil(t)
 
-	t.Logf("Copy foo/LICENSE tmp/copy-of-license2\n")
+	tLogf(t, "Copy foo/LICENSE tmp/copy-of-license2\n")
 	err = client.Copy("foo/LICENSE", "tmp/copy-of-license2")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).ToBeNil(t)
 
-	t.Logf("CopyWithoutOverwriting foo/LICENSE tmp/copy-of-license2\n")
+	tLogf(t, "CopyWithoutOverwriting foo/LICENSE tmp/copy-of-license2\n")
 	expectError("file already exists")
 	err = client.CopyWithoutOverwriting("foo/LICENSE", "tmp/copy-of-license2")
-	g.Expect(err).To(HaveOccurred())
+	expect.Error(err).ToHaveOccurred(t)
 
-	t.Logf("ReadFile tmp/copy-of-license\n")
+	tLogf(t, "ReadFile tmp/copy-of-license\n")
 	bs, err := client.ReadFile("tmp/copy-of-license")
-	g.Expect(bs, err).To(HaveLen(len(content)))
+	expect.Slice(bs, err).ToHaveLength(t, len(content))
 
-	t.Logf("Rename tmp/copy-of-license tmp/other\n")
+	tLogf(t, "Rename tmp/copy-of-license tmp/other\n")
 	err = client.Rename("tmp/copy-of-license", "tmp/other")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).ToBeNil(t)
 
-	t.Logf("Rename tmp/copy-of-license2 tmp/other\n")
+	tLogf(t, "Rename tmp/copy-of-license2 tmp/other\n")
 	err = client.Rename("tmp/copy-of-license2", "tmp/other")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).ToBeNil(t)
 
-	t.Logf("RenameWithoutOverwriting tmp/other foo/LICENSE\n")
+	tLogf(t, "RenameWithoutOverwriting tmp/other foo/LICENSE\n")
 	expectError("file already exists")
 	err = client.RenameWithoutOverwriting("tmp/other", "foo/LICENSE")
-	g.Expect(err).To(HaveOccurred())
+	expect.Error(err).ToHaveOccurred(t)
 
-	t.Logf("ReadDir foo\n")
+	tLogf(t, "ReadDir foo\n")
 	fis, err := client.ReadDir("foo")
-	g.Expect(fis, err).To(HaveLen(1))
+	expect.Slice(fis, err).ToHaveLength(t, 1)
 
-	t.Logf("ReadDir tmp\n")
+	tLogf(t, "ReadDir tmp\n")
 	fis, err = client.ReadDir("tmp")
-	g.Expect(fis, err).To(HaveLen(1))
+	expect.Slice(fis, err).ToHaveLength(t, 1)
 
-	t.Logf("ReadDir /\n")
+	tLogf(t, "ReadDir /\n")
 	fis, err = client.ReadDir("/")
-	g.Expect(fis, err).To(HaveLen(2))
-	g.Expect("foo,tmp").To(ContainSubstring(fis[0].Name()))
-	g.Expect("foo,tmp").To(ContainSubstring(fis[1].Name()))
-	g.Expect(fis[0].Name()).NotTo(Equal(fis[1].Name()))
+	expect.Slice(fis, err).ToHaveLength(t, 2)
+	expect.String("foo,tmp").ToContain(t, fis[0].Name())
+	expect.String("foo,tmp").ToContain(t, fis[1].Name())
+	expect.Any(fis[0].Name()).Not().ToBe(t, fis[1].Name())
 
-	t.Logf("Remove tmp/other\n")
+	tLogf(t, "Remove tmp/other\n")
 	err = client.Remove("tmp/other")
-	g.Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).ToBeNil(t)
 
+	tLogf(t, "closing...\n")
 	//FIXME
-	//t.Logf("ReadDir /\n")
+	//tLogf(t,"ReadDir /\n")
 	//fis, err = client.ReadDir("/")
-	//g.Expect(fis, err).To(HaveLen(1))
+	//expect.Any(fis, err).To(HaveLen(1))
 
 	server.Close()
 }
 
 func must(t *testing.T, err error) {
 	t.Helper()
-	NewGomegaWithT(t).Expect(err).NotTo(HaveOccurred())
+	expect.Error(err).ToBeNil(t)
 }
 
 func expectError(msg string) {
-	expectedErrorMu.Lock()
+	expectedErrorµ.Lock()
 	expectedError = msg
-	expectedErrorMu.Unlock()
+	expectedErrorµ.Unlock()
+}
+
+func tLogf(t *testing.T, format string, args ...any) {
+	if testing.Verbose() {
+		t.Helper()
+		t.Logf(format, args...)
+	}
 }

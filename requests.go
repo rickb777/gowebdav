@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func (c *client) request(method, path string, body io.Reader, intercept func(*http.Request)) (req *http.Response, err error) {
+func (c *client) request(method, path string, body io.Reader, header http.Header) (req *http.Response, err error) {
 	// Tee the body, because if authorization fails we will need to read from it again.
 	var r *http.Request
 	var ba *bytes.Buffer
@@ -53,8 +53,8 @@ func (c *client) request(method, path string, body io.Reader, intercept func(*ht
 
 	auth.Authorize(r)
 
-	if intercept != nil {
-		intercept(r)
+	for k, vs := range header {
+		r.Header[k] = vs
 	}
 
 	res, err := c.hc.Do(r)
@@ -81,9 +81,9 @@ func (c *client) request(method, path string, body io.Reader, intercept func(*ht
 		_ = res.Body.Close()
 
 		if body == nil {
-			return c.request(method, path, nil, intercept)
+			return c.request(method, path, nil, header)
 		} else {
-			return c.request(method, path, ba, intercept)
+			return c.request(method, path, ba, header)
 		}
 
 	} else if res.StatusCode == http.StatusUnauthorized {
@@ -109,25 +109,27 @@ func (c *client) mkcol(path string) int {
 }
 
 func (c *client) options(path string) (*http.Response, error) {
-	return c.request(http.MethodOptions, withLeadingSlash(path), nil, func(rq *http.Request) {
-		rq.Header.Add("Depth", "0")
-	})
+	header := make(http.Header)
+	header.Add("Depth", "0")
+	return c.request(http.MethodOptions, withLeadingSlash(path), nil, header)
 }
 
 func (c *client) propfind(path string, self bool, body string, resp interface{}, parse func(resp interface{}) error) error {
 	path = withLeadingSlash(path)
-	res, err := c.request(MethodPropfind, path, strings.NewReader(body), func(req *http.Request) {
-		if self {
-			req.Header.Add("Depth", "0")
-		} else {
-			req.Header.Add("Depth", "1")
-		}
-		req.Header.Add("Content-Type", "application/xml;charset=UTF-8")
-		req.Header.Add("Accept", "application/xml,text/xml")
-		req.Header.Add("Accept-Charset", "utf-8")
-		// TODO add support for 'gzip,deflate;q=0.8,q=0.7'
-		req.Header.Add("Accept-Encoding", "")
-	})
+
+	header := make(http.Header)
+	if self {
+		header.Add("Depth", "0")
+	} else {
+		header.Add("Depth", "1")
+	}
+	header.Add("Content-Type", "application/xml;charset=UTF-8")
+	header.Add("Accept", "application/xml,text/xml")
+	header.Add("Accept-Charset", "utf-8")
+	// TODO add support for 'gzip,deflate;q=0.8,q=0.7'
+	//header.Add("Accept-Encoding", "")
+
+	res, err := c.request(MethodPropfind, path, strings.NewReader(body), header)
 	if err != nil {
 		return err
 	}
@@ -144,14 +146,15 @@ func (c *client) copymove(method string, oldpath string, newpath string, overwri
 	oldpath = withLeadingSlash(oldpath)
 	newpath = withLeadingSlash(newpath)
 
-	res, err := c.request(method, oldpath, nil, func(rq *http.Request) {
-		rq.Header.Add("Destination", c.root+newpath)
-		if overwrite {
-			rq.Header.Add("Overwrite", "T")
-		} else {
-			rq.Header.Add("Overwrite", "F")
-		}
-	})
+	header := make(http.Header)
+	header.Add("Destination", c.root+newpath)
+	if overwrite {
+		header.Add("Overwrite", "T")
+	} else {
+		header.Add("Overwrite", "F")
+	}
+
+	res, err := c.request(method, oldpath, nil, header)
 	if err != nil {
 		return newPathErrorErr(method, oldpath, err)
 	}
@@ -178,14 +181,14 @@ func (c *client) copymove(method string, oldpath string, newpath string, overwri
 	return newPathError(method, oldpath, res.StatusCode)
 }
 
-func (c *client) put(path string, stream io.Reader) int {
-	res, err := c.request(http.MethodPut, withLeadingSlash(path), stream, nil)
+func (c *client) put(path string, stream io.Reader, header http.Header) (int, error) {
+	res, err := c.request(http.MethodPut, withLeadingSlash(path), stream, header)
 	if err != nil {
-		return http.StatusBadRequest
+		return 0, err
 	}
 	_ = res.Body.Close()
 
-	return res.StatusCode
+	return res.StatusCode, nil
 }
 
 func (c *client) createParentCollection(itemPath string) (err error) {

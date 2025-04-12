@@ -55,10 +55,10 @@ type Client interface {
 	ReadStream(path string) (io.ReadCloser, error)
 
 	// WriteFile writes data to a given path on the webdav server.
-	WriteFile(path string, data []byte, _ os.FileMode) error
+	WriteFile(path string, data []byte, contentType string) error
 
 	// WriteStream writes from a stream to a resource on the webdav server.
-	WriteStream(path string, stream io.Reader, _ os.FileMode) error
+	WriteStream(path string, stream io.Reader, contentType string) error
 
 	//----- Afero.Fs methods below (incomplete) -----
 
@@ -482,43 +482,26 @@ func (c *client) ReadStream(path string) (io.ReadCloser, error) {
 // }
 
 // WriteFile writes data to a given path on the webdav server.
-func (c *client) WriteFile(path string, data []byte, _ os.FileMode) error {
-	s := c.put(path, bytes.NewReader(data))
-	switch s {
-
-	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
-		return nil
-
-	case 409:
-		err := c.createParentCollection(path)
-		if err != nil {
-			return err
-		}
-
-		s = c.put(path, bytes.NewReader(data))
-		if s == http.StatusOK || s == http.StatusCreated || s == http.StatusNoContent {
-			return nil
-		}
-	}
-
-	return newPathError("WriteFile", path, s)
+func (c *client) WriteFile(path string, data []byte, contentType string) error {
+	return c.WriteStream(path, bytes.NewReader(data), contentType)
 }
 
 // WriteStream writes from a stream to a resource on the webdav server.
-func (c *client) WriteStream(path string, stream io.Reader, _ os.FileMode) error {
-
-	err := c.createParentCollection(path)
-	if err != nil {
-		return err
+func (c *client) WriteStream(path string, stream io.Reader, contentType string) error {
+	if contentType == "" {
+		contentType = "application/octet-stream"
 	}
 
-	s := c.put(path, stream)
+	header := make(http.Header)
+	header.Add("Content-Type", contentType)
 
-	switch s {
-	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
-		return nil
+	s, err := c.put(path, stream, header)
+	if err != nil {
+		return newPathErrorErr("WriteStream", path, err)
+	}
 
-	default:
+	if s >= 400 {
 		return newPathError("WriteStream", path, s)
 	}
+	return nil
 }
