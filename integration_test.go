@@ -2,6 +2,7 @@ package gowebdav_test
 
 import (
 	"bytes"
+	"github.com/rickb777/httpclient/logging/logger"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -59,13 +60,13 @@ func testIntegration(t *testing.T, authenticator auth.Authenticator) {
 	server := httptest.NewServer(handler)
 	server.Client()
 
-	logger := logging.LogWriter(os.Stdout)
+	lgr := logger.LogWriter(os.Stdout, nil)
 	level := logging.Summary
 	if testing.Verbose() {
 		//level = logging.WithHeaders
 		level = logging.WithHeadersAndBodies
 	}
-	httpClient := loggingclient.New(server.Client(), logger, level)
+	httpClient := loggingclient.New(server.Client(), lgr, level)
 
 	client := gowebdav.NewClient(server.URL+"/a",
 		gowebdav.SetAuthentication(authenticator),

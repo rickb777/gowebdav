@@ -8,6 +8,7 @@ import (
 	"github.com/rickb777/gowebdav/auth"
 	netrcpkg "github.com/rickb777/gowebdav/netrc"
 	"github.com/rickb777/httpclient/logging"
+	"github.com/rickb777/httpclient/logging/logger"
 	"github.com/rickb777/httpclient/loggingclient"
 	"io"
 	"net/http"
@@ -59,14 +60,14 @@ func main() {
 		}
 	}
 
-	logger := logging.LogWriter(os.Stdout)
+	lgr := logger.LogWriter(os.Stdout, nil)
 	level := logging.Off
 	if *veryVerbose {
 		level = logging.WithHeadersAndBodies
 	} else if *verbose {
 		level = logging.WithHeaders
 	}
-	httpClient := loggingclient.New(http.DefaultClient, logger, level)
+	httpClient := loggingclient.New(http.DefaultClient, lgr, level)
 
 	c := d.NewClient(*root,
 		d.SetAuthentication(selectAuthenticator(*user, *password, *site, *authenticator)),

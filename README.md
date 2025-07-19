@@ -1,8 +1,8 @@
 # GoWebDAV
 
-[![Build Status](https://travis-ci.org/rickb777/gowebdav.svg?branch=master)](https://travis-ci.org/rickb777/gowebdav)
 [![GoDoc](https://godoc.org/github.com/rickb777/gowebdav?status.svg)](https://godoc.org/github.com/rickb777/gowebdav)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rickb777/gowebdav)](https://goreportcard.com/report/github.com/rickb777/gowebdav)
+[![Issues](https://img.shields.io/github/issues/rickb777/gowebdav.svg)](https://github.com/rickb777/gowebdav/issues)
 
 A golang WebDAV client library with a command line tool included.
 
