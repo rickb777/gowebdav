@@ -1,7 +1,9 @@
 # GoWebDAV
 
-[![GoDoc](https://godoc.org/github.com/rickb777/gowebdav?status.svg)](https://godoc.org/github.com/rickb777/gowebdav)
+[![GoDoc](https://img.shields.io/badge/api-Godoc-blue.svg)](http://pkg.go.dev/github.com/rickb777/gowebdav)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rickb777/gowebdav)](https://goreportcard.com/report/github.com/rickb777/gowebdav)
+[![Build](https://github.com/rickb777/gowebdav/actions/workflows/go.yml/badge.svg)](https://github.com/rickb777/gowebdav/actions)
+[![Coverage](https://coveralls.io/repos/github/rickb777/gowebdav/badge.svg?branch=main)](https://coveralls.io/github/rickb777/gowebdav?branch=main)
 [![Issues](https://img.shields.io/github/issues/rickb777/gowebdav.svg)](https://github.com/rickb777/gowebdav/issues)
 
 A golang WebDAV client library with a command line tool included.
@@ -137,6 +139,10 @@ webdavFilePath := "folder/subfolder/file.txt"
 
 c.Remove(webdavFilePath)
 ```
+
+## Command-Line Tool
+
+See [cmd/gowebdav](cmd/gowebdav/README.md).
 
 ## Links
 

@@ -4,12 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	d "github.com/rickb777/gowebdav"
-	"github.com/rickb777/gowebdav/auth"
-	netrcpkg "github.com/rickb777/gowebdav/netrc"
-	"github.com/rickb777/httpclient/logging"
-	"github.com/rickb777/httpclient/logging/logger"
-	"github.com/rickb777/httpclient/loggingclient"
 	"io"
 	"net/http"
 	"os"
@@ -17,6 +11,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	dav "github.com/rickb777/gowebdav"
+	"github.com/rickb777/gowebdav/auth"
+	"github.com/rickb777/httpclient/logging"
+	"github.com/rickb777/httpclient/logging/logger"
+	"github.com/rickb777/httpclient/loggingclient"
+	netrcpkg "github.com/rickb777/netrc"
 )
 
 func main() {
@@ -69,9 +70,9 @@ func main() {
 	}
 	httpClient := loggingclient.New(http.DefaultClient, lgr, level)
 
-	c := d.NewClient(*root,
-		d.SetAuthentication(selectAuthenticator(*user, *password, *site, *authenticator)),
-		d.SetHttpClient(httpClient))
+	c := dav.NewClient(*root,
+		dav.SetAuthentication(selectAuthenticator(*user, *password, *site, *authenticator)),
+		dav.SetHttpClient(httpClient))
 
 	cmd := getCmd(*method)
 
@@ -118,7 +119,7 @@ func getHome() string {
 	}
 }
 
-type command func(c d.Client, p0 ...string) error
+type command func(c dav.Client, p0 ...string) error
 
 func getCmd(method string) command {
 	switch strings.ToLower(method) {
@@ -150,7 +151,7 @@ func getCmd(method string) command {
 		return cmdPut
 
 	default:
-		return func(c d.Client, p ...string) (err error) {
+		return func(c dav.Client, p ...string) (err error) {
 			return errors.New("Unsupported method: " + method)
 		}
 	}
@@ -162,7 +163,7 @@ func failIfTooManyArgs(p []string, max int) {
 	}
 }
 
-func cmdLs(c d.Client, p ...string) (err error) {
+func cmdLs(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 1)
 
 	files, err := c.ReadDir(p[0])
@@ -175,7 +176,7 @@ func cmdLs(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdStat(c d.Client, p ...string) (err error) {
+func cmdStat(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 1)
 
 	file, err := c.Stat(p[0])
@@ -185,7 +186,7 @@ func cmdStat(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdGet(c d.Client, p ...string) (err error) {
+func cmdGet(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 2)
 
 	bytes, err := c.ReadFile(p[0])
@@ -202,7 +203,7 @@ func cmdGet(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdRm(c d.Client, p ...string) (err error) {
+func cmdRm(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 1)
 
 	if err = c.Remove(p[0]); err == nil {
@@ -211,7 +212,7 @@ func cmdRm(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdMkdir(c d.Client, p ...string) (err error) {
+func cmdMkdir(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 1)
 
 	if err = c.Mkdir(p[0], 0755); err == nil {
@@ -220,7 +221,7 @@ func cmdMkdir(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdMkdirAll(c d.Client, p ...string) (err error) {
+func cmdMkdirAll(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 1)
 
 	if err = c.MkdirAll(p[0], 0755); err == nil {
@@ -229,7 +230,7 @@ func cmdMkdirAll(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdMv(c d.Client, p ...string) (err error) {
+func cmdMv(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 2)
 
 	if err = c.Rename(p[0], p[1]); err == nil {
@@ -238,7 +239,7 @@ func cmdMv(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdCp(c d.Client, p ...string) (err error) {
+func cmdCp(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 2)
 
 	if err = c.Copy(p[0], p[1]); err == nil {
@@ -247,7 +248,7 @@ func cmdCp(c d.Client, p ...string) (err error) {
 	return
 }
 
-func cmdPut(c d.Client, p ...string) (err error) {
+func cmdPut(c dav.Client, p ...string) (err error) {
 	failIfTooManyArgs(p, 2)
 
 	p1 := filepath.Join(".", p[0])

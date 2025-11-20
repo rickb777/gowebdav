@@ -5,9 +5,11 @@ go 1.24.1
 toolchain go1.24.2
 
 require (
+	github.com/magefile/mage v1.15.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/rickb777/expect v1.0.6
 	github.com/rickb777/httpclient v0.35.1
+	github.com/rickb777/netrc v0.5.2
 	golang.org/x/net v0.47.0
 )
 
@@ -20,3 +22,5 @@ require (
 )
 
 //replace github.com/rickb777/httpclient => ../httpclient
+
+tool github.com/magefile/mage
