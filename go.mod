@@ -5,9 +5,9 @@ go 1.25.0
 require (
 	github.com/magefile/mage v1.17.2
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/rickb777/expect v1.3.2
-	github.com/rickb777/httpclient v0.50.0
-	github.com/rickb777/netrc v1.0.1
+	github.com/rickb777/expect v1.3.3
+	github.com/rickb777/httpclient v0.51.0
+	github.com/rickb777/netrc v1.0.2
 	golang.org/x/net v0.57.0
 )
 
